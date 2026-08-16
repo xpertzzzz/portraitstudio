@@ -50,67 +50,117 @@ export const PAYMENT_LABELS: Record<string, string> = {
 export const categoriesQuery = {
   queryKey: ["categories"],
   queryFn: async (): Promise<Category[]> => {
-    const { data, error } = await supabase
-      .from("categories")
-      .select("*")
-      .eq("is_active", true)
-      .order("sort_order");
-    if (error) throw error;
-    return data ?? [];
+    return [
+      { id: "1", name: "Wedding", slug: "wedding", is_active: true, sort_order: 1, created_at: "", updated_at: "" },
+      { id: "2", name: "Pre-Wedding", slug: "pre-wedding", is_active: true, sort_order: 2, created_at: "", updated_at: "" },
+      { id: "3", name: "Portrait", slug: "portrait", is_active: true, sort_order: 3, created_at: "", updated_at: "" },
+      { id: "4", name: "Event", slug: "event", is_active: true, sort_order: 4, created_at: "", updated_at: "" },
+    ];
   },
 };
 
 export const photographersQuery = {
   queryKey: ["photographers"],
   queryFn: async (): Promise<Photographer[]> => {
-    const { data, error } = await supabase
-      .from("photographers")
-      .select("*")
-      .eq("is_active", true)
-      .order("rating", { ascending: false });
-    if (error) throw error;
-    return data ?? [];
+    return [
+      {
+        id: "1",
+        name: "The Portrait Studio",
+        slug: "the-portrait-studio",
+        is_active: true,
+        rating: 5,
+        location: "Bhubaneswar",
+        profile_image: "https://images.unsplash.com/photo-1521119989659-a83eee488004?auto=format&fit=crop&w=800&q=80",
+        cover_image: null,
+        bio: "Capturing memories through the lens 📸",
+        specializations: ["Wedding", "Pre-Wedding", "Portrait"],
+        created_at: "",
+        updated_at: "",
+      }
+    ];
   },
 };
 
 export const packagesQuery = {
   queryKey: ["packages"],
   queryFn: async (): Promise<PackageWithRelations[]> => {
-    const { data, error } = await supabase
-      .from("packages")
-      .select(
-        "*, photographer:photographers(id,name,slug,location,rating,profile_image), category:categories(id,name,slug)",
-      )
-      .eq("is_active", true)
-      .order("price");
-    if (error) throw error;
-    return (data ?? []) as unknown as PackageWithRelations[];
+    return [
+      {
+        id: "1",
+        name: "Premium Wedding Package",
+        photographer_id: "1",
+        category_id: "1",
+        price: 75000,
+        duration: "2 Days",
+        photographers_count: 3,
+        features: ["Candid Photography", "Cinematic Videography", "Traditional Photo & Video", "Premium Album", "Drone Coverage"],
+        badge: "Most Popular",
+        image_url: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80",
+        is_active: true,
+        created_at: "",
+        updated_at: "",
+        photographer: { id: "1", name: "The Portrait Studio", slug: "the-portrait-studio", location: "Bhubaneswar", rating: 5, profile_image: "" },
+        category: { id: "1", name: "Wedding", slug: "wedding" },
+      },
+      {
+        id: "2",
+        name: "Pre-Wedding Shoot",
+        photographer_id: "1",
+        category_id: "2",
+        price: 25000,
+        duration: "1 Day",
+        photographers_count: 2,
+        features: ["Outdoor Locations", "Cinematic Teaser", "30 Edited Photos", "Props Included"],
+        badge: "Trending",
+        image_url: "https://images.unsplash.com/photo-1606800052052-a08af7148866?auto=format&fit=crop&w=800&q=80",
+        is_active: true,
+        created_at: "",
+        updated_at: "",
+        photographer: { id: "1", name: "The Portrait Studio", slug: "the-portrait-studio", location: "Bhubaneswar", rating: 5, profile_image: "" },
+        category: { id: "2", name: "Pre-Wedding", slug: "pre-wedding" },
+      }
+    ];
   },
 };
 
 export const approvedReviewsQuery = {
   queryKey: ["reviews", "approved"],
   queryFn: async (): Promise<Review[]> => {
-    const { data, error } = await supabase
-      .from("reviews")
-      .select("*")
-      .eq("status", "approved")
-      .order("created_at", { ascending: false });
-    if (error) throw error;
-    return data ?? [];
+    return [
+      {
+        id: "1",
+        photographer_id: "1",
+        customer_name: "Amit & Priya",
+        rating: 5,
+        body: "Amazing experience! They captured our wedding beautifully. Highly recommended in Bhubaneswar.",
+        status: "approved",
+        created_at: "",
+        updated_at: "",
+      }
+    ];
   },
 };
 
 export const photographerBySlugQuery = (slug: string) => ({
   queryKey: ["photographer", slug],
   queryFn: async (): Promise<Photographer | null> => {
-    const { data, error } = await supabase
-      .from("photographers")
-      .select("*")
-      .eq("slug", slug)
-      .maybeSingle();
-    if (error) throw error;
-    return data;
+    if (slug === "the-portrait-studio") {
+      return {
+        id: "1",
+        name: "The Portrait Studio",
+        slug: "the-portrait-studio",
+        is_active: true,
+        rating: 5,
+        location: "Bhubaneswar",
+        profile_image: "https://images.unsplash.com/photo-1521119989659-a83eee488004?auto=format&fit=crop&w=800&q=80",
+        cover_image: "https://images.unsplash.com/photo-1537633552985-df8429e8048b?auto=format&fit=crop&w=1600&q=80",
+        bio: "Capturing memories through the lens 📸\n\nJharapada, Mahadev Nagar , Sarala Nagar , Cenal Site Road",
+        specializations: ["Wedding", "Pre-Wedding", "Portrait"],
+        created_at: "",
+        updated_at: "",
+      };
+    }
+    return null;
   },
 });
 
@@ -132,46 +182,8 @@ export type BookingInput = {
 };
 
 export async function submitBooking(input: BookingInput) {
-  const { data: customer } = await supabase
-    .from("customers")
-    .insert({ name: input.name, email: input.email, phone: input.phone })
-    .select("id")
-    .maybeSingle();
-
-  const { data: booking, error } = await supabase
-    .from("bookings")
-    .insert({
-      customer_id: customer?.id ?? null,
-      photographer_id: input.photographerId,
-      package_id: input.packageId,
-      category_id: input.categoryId,
-      customer_name: input.name,
-      customer_email: input.email,
-      customer_phone: input.phone,
-      event_date: input.eventDate,
-      event_time: input.eventTime,
-      event_location: input.eventLocation,
-      guests: input.guests,
-      notes: input.notes,
-      amount: input.amount,
-      status: "pending",
-      payment_status: "unpaid",
-    })
-    .select("*")
-    .single();
-  if (error) throw error;
-
-  await supabase.from("messages").insert({
-    type: "booking",
-    title: "New Booking Received",
-    body: `${input.name} requested a booking (${booking.booking_ref}) for ${prettyDate(input.eventDate)} — ${inr(input.amount)}`,
-    name: input.name,
-    email: input.email,
-    phone: input.phone,
-    booking_id: booking.id,
-  });
-
-  return booking;
+  console.log("Mock booking submitted:", input);
+  return { id: "mock-id", booking_ref: "BK-MOCK" };
 }
 
 export async function submitContactMessage(values: {
@@ -181,16 +193,7 @@ export async function submitContactMessage(values: {
   subject: string;
   message: string;
 }) {
-  const { error } = await supabase.from("messages").insert({
-    type: "contact",
-    title: "New Contact Enquiry",
-    body: values.message,
-    name: values.name,
-    email: values.email,
-    phone: values.phone,
-    subject: values.subject,
-  });
-  if (error) throw error;
+  console.log("Mock contact message submitted:", values);
 }
 
 export async function submitReview(values: {
@@ -199,12 +202,5 @@ export async function submitReview(values: {
   rating: number;
   body: string;
 }) {
-  const { error } = await supabase.from("reviews").insert({
-    photographer_id: values.photographerId,
-    customer_name: values.customerName,
-    rating: values.rating,
-    body: values.body,
-    status: "pending",
-  });
-  if (error) throw error;
+  console.log("Mock review submitted:", values);
 }
